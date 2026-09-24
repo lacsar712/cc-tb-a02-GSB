@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>静置设置</h1>
+<form method="post" action="{{ url_for('update_settings') }}">
+  <p>同一批次相邻两壶之间的最短静置时间。秒数不够的壶次递交会被服务端拒绝。</p>
+  {% if saved %}<p class="ok-note">已保存新的静置秒数。</p>{% endif %}
+  <label>最短静置秒数
+    <input name="min_rest_seconds" type="number" min="0" step="1" value="{{ rest_seconds }}" required />
+  </label>
+  <button>保存</button>
+  <p class="muted">设为 0 表示不限制；当前为 {{ rest_seconds }} 秒。</p>
+</form>
+<p><a href="{{ url_for('home') }}">返回开壶</a> · <a href="{{ url_for('ledger') }}">查看壶次台账</a></p>
+{% endblock %}

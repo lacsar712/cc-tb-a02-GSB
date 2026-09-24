@@ -5,19 +5,37 @@
   <title>茶叶拼配审评台</title>
   <style>
     body { font-family: "Palatino Linotype", serif; background: #f6f1e7; color: #3f2e22; margin: 0; }
-    header { background: #6b3e26; color: #fff; padding: 12px 20px; display: flex; gap: 16px; }
+    header { background: #6b3e26; color: #fff; padding: 12px 20px; display: flex; gap: 16px; align-items: center; }
     header a { color: #f6e7c1; }
+    header .spacer { flex: 1; }
     main { max-width: 820px; margin: 20px auto; }
     table { width: 100%; background: #fffaf3; border-collapse: collapse; }
     td, th { padding: 8px; border-bottom: 1px solid #e6d3c0; text-align: left; }
     form { background: #fffaf3; padding: 12px; margin-bottom: 16px; }
+    input, select, button { font: inherit; padding: 4px 6px; }
     .pass { color: #166534; } .fail { color: #9f1239; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+    .chip { background: #fffaf3; border: 1px solid #d8c3ad; border-radius: 14px; padding: 6px 12px; cursor: pointer; font-size: 14px; }
+    .chip.ready { border-color: #166534; }
+    .chip.waiting { border-color: #b45309; color: #92400e; cursor: default; }
+    .muted { color: #8a7460; font-size: 13px; }
+    .ok-note { color: #166534; }
+    .timeline { list-style: none; margin: 0; padding: 0; }
+    .timeline > li { position: relative; padding: 0 0 20px 28px; border-left: 2px solid #d8c3ad; margin-left: 8px; }
+    .timeline > li::before { content: ""; position: absolute; left: -7px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: #6b3e26; }
+    .timeline .gap { font-size: 13px; color: #8a7460; }
+    .lot-group { background: #fffaf3; padding: 14px 18px; margin-bottom: 18px; border: 1px solid #e6d3c0; }
   </style>
 </head>
 <body>
   <header>
-    <strong>茶叶拼配审评台</strong>
+    <a href="{{ url_for('home') }}"><strong>茶叶拼配审评台</strong></a>
     {% if session.user %}
+      <a href="{{ url_for('ledger') }}">壶次台账</a>
+      {% if session.role == 'writer' %}
+        <a href="{{ url_for('settings_page') }}">静置设置</a>
+      {% endif %}
+      <span class="spacer"></span>
       <span>{{ session.user }}</span>
       <a href="{{ url_for('logout') }}">退出</a>
     {% endif %}
@@ -35,7 +53,11 @@
       });
       const html = await res.text();
       if (!res.ok) { alert(html); return; }
-      document.querySelector("#rows").insertAdjacentHTML("afterbegin", html);
+      const rows = document.querySelector("#rows");
+      if (rows) rows.insertAdjacentHTML("afterbegin", html);
+      document.dispatchEvent(new CustomEvent("pot:submitted", {
+        detail: { lot: (new FormData(form)).get("lot") },
+      }));
       form.reset();
     });
   </script>

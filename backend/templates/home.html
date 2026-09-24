@@ -1,19 +1,58 @@
 {% extends "base.html" %}
 {% block body %}
 {% if can_write %}
-<form method="post" action="{{ url_for('create') }}" data-swap="1">
-  <h2>新开一轮审评</h2>
-  <input name="lot" placeholder="批次" required />
+<form method="post" action="{{ url_for('submit_pot') }}" data-swap="1">
+  <h2>开壶递交</h2>
+  <p class="muted">
+    同一批次按壶序逐壶递交，只能交「已成功壶数 + 1」；跳壶、重复壶序都会被拒。
+    相邻两壶最短静置 <strong>{{ rest_seconds }}</strong> 秒（<a href="{{ url_for('settings_page') }}">修改</a>）。
+  </p>
+  {% if lot_status %}
+  <div class="chips">
+    {% for stat in lot_status %}
+      <button type="button"
+              class="chip {% if stat.wait == 0 %}ready{% else %}waiting{% endif %}"
+              data-lot="{{ stat.lot }}" data-seq="{{ stat.next_seq }}"
+              {% if stat.wait > 0 %}disabled{% endif %}>
+        {{ stat.lot }} · 已交 {{ stat.pot_count }} 壶
+        {% if stat.wait == 0 %}· 下一壶 第 {{ stat.next_seq }} 壶{% else %}· 静置还差 {{ stat.wait }} 秒{% endif %}
+      </button>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <label>批次
+    <input name="lot" id="pot-lot" list="lot-options" placeholder="选择或输入批次，如 春芽" required />
+  </label>
+  <datalist id="lot-options">
+    {% for lot in all_lots %}<option value="{{ lot }}"></option>{% endfor %}
+  </datalist>
+  <label>壶序 <input name="pot_seq" id="pot-seq" type="number" min="1" step="1" placeholder="第几壶" required /></label>
   <input name="aroma" type="number" step="0.1" min="0" max="10" placeholder="香气" required />
   <input name="taste" type="number" step="0.1" min="0" max="10" placeholder="滋味" required />
   <input name="liquor" type="number" step="0.1" min="0" max="10" placeholder="汤色" required />
-  <button>提交</button>
+  <button>递交本壶</button>
 </form>
 {% endif %}
+
+<h2>审评记录总表</h2>
 <table>
   <thead><tr><th>批次</th><th>加权分</th><th>结论</th><th>说明</th></tr></thead>
   <tbody id="rows">
     {% for row in rows %}{% include "_row.html" %}{% endfor %}
   </tbody>
 </table>
+<p class="muted">壶次时间线见顶栏「<a href="{{ url_for('ledger') }}">壶次台账</a>」专页。</p>
+
+{% if can_write %}
+<script>
+  document.querySelectorAll(".chip.ready").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      document.querySelector("#pot-lot").value = chip.dataset.lot;
+      document.querySelector("#pot-seq").value = chip.dataset.seq;
+    });
+  });
+  // 递交成功后整页刷新，让壶序与静置倒计时以服务端状态为准
+  document.addEventListener("pot:submitted", () => window.location.reload());
+</script>
+{% endif %}
 {% endblock %}

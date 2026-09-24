@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>壶次台账</h1>
+<p class="muted">
+  按批次展示每一壶的递交时间线。当前最短静置 {{ rest_seconds }} 秒。
+  {% if not can_write %}观察员仅有查看权限。{% endif %}
+</p>
+
+{% if not groups %}
+  <p>暂无壶次记录。{% if can_write %}去<a href="{{ url_for('home') }}">开壶</a>递交第一壶。{% endif %}</p>
+{% endif %}
+
+{% for group in groups %}
+<section class="lot-group">
+  <h2>批次 {{ group.lot }} <span class="muted">共 {{ group.pots|length }} 壶</span></h2>
+  <ol class="timeline">
+    {% for pot in group.pots %}
+    <li>
+      <div><strong>第 {{ pot.pot_seq }} 壶</strong>
+        · 加权分 {{ pot.score }}
+        · <span class="{% if pot.verdict == '通过' %}pass{% else %}fail{% endif %}">{{ pot.verdict }}</span>
+      </div>
+      <div class="muted">{{ pot.created_at }} UTC · {{ pot.created_by }} 递交 · {{ pot.note }}</div>
+      {% if pot.gap_seconds is not none %}
+        <div class="gap">距上一壶 {{ pot.gap_seconds }} 秒
+          {%- if pot.gap_seconds >= rest_seconds %}（满足静置 {{ rest_seconds }} 秒）{% else %}（不足静置 {{ rest_seconds }} 秒）{% endif -%}
+        </div>
+      {% else %}
+        <div class="gap">本批首壶</div>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+{% endfor %}
+{% endblock %}
