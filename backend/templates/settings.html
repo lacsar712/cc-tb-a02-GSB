@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>静置秒数设置</h2>
+<p>同一批次两壶之间，审评员要求的最短静置时间。秒数不够时开壶会被拒交。</p>
+{% if can_write %}
+<form method="post" action="{{ url_for('settings_page') }}">
+  <label>最短静置秒数
+    <input name="min_rest_seconds" type="number" min="0" step="1" value="{{ min_rest }}" required />
+  </label>
+  <button>保存</button>
+  <p class="hint">设为 0 表示不要求静置，可连续开壶。</p>
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+</form>
+{% else %}
+<p>当前最短静置秒数：<strong>{{ min_rest }}</strong> 秒</p>
+<p class="hint">观察员只可查看，不可修改。</p>
+{% endif %}
+{% endblock %}

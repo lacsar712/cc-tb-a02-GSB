@@ -1,0 +1,7 @@
+<tr>
+  <td>{{ row.lot }}</td>
+  <td>第 {{ row.pot_no }} 壶</td>
+  <td>{{ row.created_at }}</td>
+  <td>{% if row.gap is none %}—{% else %}{{ row.gap | round(0) | int }} 秒{% endif %}</td>
+  <td>{{ row.created_by }}</td>
+</tr>

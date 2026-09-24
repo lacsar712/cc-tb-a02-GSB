@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>壶次台账</h2>
+{% if can_write %}
+<form method="post" action="{{ url_for('submit_pot') }}" data-swap="1" data-target="#pot-rows">
+  <h3>开壶递交</h3>
+  <label>批次
+    <select name="lot" required>
+      <option value="" disabled selected>选择批次</option>
+      {% for b in batches %}<option value="{{ b }}">{{ b }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>壶序 <input name="pot_no" type="number" min="1" step="1" placeholder="如 1" required /></label>
+  <button>递交本壶</button>
+  <p class="hint">同一批次只能按壶序连续递交：当前壶序须等于该批已成功壶数加一，跳壶或重复壶序会被拒交。两壶间隔须满 {{ min_rest }} 秒，否则拒交并提示还差多少秒。</p>
+</form>
+{% else %}
+<p class="hint">观察员身份：可查看壶次时间线，不可开壶、不可修改静置秒数。</p>
+{% endif %}
+
+<h3>时间线</h3>
+<table>
+  <thead>
+    <tr><th>批次</th><th>壶序</th><th>递交时间</th><th>与上一壶间隔</th><th>递交人</th></tr>
+  </thead>
+  <tbody id="pot-rows">
+    {% for row in rows %}{% include "_pot_row.html" %}{% endfor %}
+  </tbody>
+</table>
+{% if not rows %}<p class="hint">还没有任何壶次记录。</p>{% endif %}
+{% endblock %}

@@ -42,6 +42,41 @@ def main():
                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",
                 (lot, aroma, taste, liquor, score, verdict, note, "taster"),
             )
+
+    # 壶次台账：同一批次按壶序连续递交
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS pots (
+            id serial PRIMARY KEY,
+            lot text NOT NULL,
+            pot_no integer NOT NULL,
+            created_by text NOT NULL,
+            created_at timestamptz NOT NULL DEFAULT now(),
+            UNIQUE (lot, pot_no)
+        )"""
+    )
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_pots_lot_no ON pots (lot, pot_no)")
+
+    # 可选的批次名录，用于开壶时下拉选择批次
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS batches (
+            id serial PRIMARY KEY,
+            name text UNIQUE NOT NULL
+        )"""
+    )
+    for name in ("春芽", "夏茶-C"):
+        cur.execute("INSERT INTO batches (name) VALUES (%s) ON CONFLICT (name) DO NOTHING", (name,))
+
+    # 单例设置：两壶之间审评员要求的最短静置秒数
+    cur.execute(
+        """CREATE TABLE IF NOT EXISTS settings (
+            id integer PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+            min_rest_seconds integer NOT NULL DEFAULT 30
+        )"""
+    )
+    cur.execute(
+        "INSERT INTO settings (id, min_rest_seconds) VALUES (1, 30) ON CONFLICT (id) DO NOTHING"
+    )
+
     conn.commit()
     cur.close()
     conn.close()
